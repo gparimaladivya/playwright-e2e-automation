@@ -1,0 +1,40 @@
+trigger:
+  - main
+  - master
+  - develop
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - task: UseNode@1
+    inputs:
+      version: '20.x'
+    displayName: 'Use Node.js 20.x'
+
+  - script: |
+      node -v
+      npm -v
+    displayName: 'Verify Node/NPM'
+
+  - script: |
+      npm ci
+    displayName: 'Install dependencies'
+
+  - script: |
+      npx playwright install --with-deps
+    displayName: 'Install Playwright browsers + deps'
+
+  - script: |
+      npx playwright test --reporter=html
+    displayName: 'Run Playwright tests'
+    env:
+      CI: 'true'
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Playwright HTML report'
+    condition: always()
+    inputs:
+      targetPath: 'playwright-report'
+      artifact: 'playwright-report'
+      publishLocation: 'pipeline'
